@@ -3,8 +3,9 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
-import CircularProgress from '@mui/material/CircularProgress';
 import Rating from '@mui/material/Rating';
+import Divider from '@mui/material/Divider';
+
 import Link from '@mui/material/Link';
 import Box from '@mui/material/Box';
 import NewspaperIcon from '@mui/icons-material/Newspaper';
@@ -12,6 +13,52 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
+import CircularProgress, {
+  CircularProgressProps,
+} from '@mui/material/CircularProgress';
+
+function CircularProgressWithLabel(
+  props: CircularProgressProps & { value: number },
+) {
+  return (
+    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+      <CircularProgress variant="determinate" {...props} />
+      <Box
+        sx={{
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          position: 'absolute',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Typography
+          variant="caption"
+          component="div"
+          color="text.secondary"
+        >{`${Math.round(props.value)}%`}</Typography>
+      </Box>
+    </Box>
+  );
+}
+
+function CircularStatic() {
+  const [progress, setProgress] = React.useState(10);
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress((prevProgress) => (prevProgress >= 100 ? 0 : prevProgress + 10));
+    }, 800);
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
+
+  return <CircularProgressWithLabel value={progress} />;
+}
 function NewsForm(props: any) {
   return (
     <Box component="form" onSubmit={props.handleSubmit} noValidate sx={{ mt: 1, width: "100%" }}>
@@ -47,31 +94,35 @@ function Result(props: any) {
     <Box sx={{ mt: 1, width: "100%" }}>
       { bias && <>
         <Typography component="h3" variant="h4" sx={{ mt: 3 }}>
-            Biased?
+          Neutrality
         </Typography>
-        <Rating defaultValue={bias.bias_score * 5} precision={0.1} readOnly />
+        <Rating defaultValue={5 - (bias.bias_score * 5)} precision={0.1} readOnly />
       </> }
+      <Divider variant="middle" sx={{ m: 3 }}/>
       { fake && <>
         <Typography component="h3" variant="h4" sx={{ mt: 3 }}>
-            {fake.label}?
+            Real or Fake?
         </Typography>
-        <Rating defaultValue={fake.prob * 5} precision={0.1} readOnly />
+        <Typography component="h5" variant="h5">Result: {fake.label}</Typography>
+        <br />
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Typography component="h5" variant="h5" sx={{ mr: 3 }}>Confidence: </Typography>
+          <CircularProgressWithLabel variant="determinate" value={fake.prob * 100} />
+        </Box>
       </> }
-      { claims && <>
+      <Divider variant="middle" sx={{ m: 3 }}/>
+      { (claims && claims.claims) && <>
         <Typography component="h3" variant="h4" sx={{ mt: 3 }}>
-            Claims
+            Claims Analysis
         </Typography>
-        {claims.map((c: any) => {
-          const { claim, possible_source, truthfulness } = c;
-          return (<Box sx={{ m: 3 }}>
+        {claims.claims.map((c: any, index: number) => {
+          const { claim, bias } = c;
+          return (<Box sx={{ m: 5 }} key={index}>
             <Typography component="p" sx={{ mt: 1 }}>
-              Claim: {claim}
+              <Box component="span" sx={{ fontWeight: "bold" }}>Claim {index + 1}</Box>: {claim}
             </Typography>
             <Typography component="p" sx={{ mt: 1 }}>
-              Possible Source: {possible_source}
-            </Typography>
-            <Typography component="p" sx={{ mt: 1 }}>
-              Truthfulness: {truthfulness}
+              <Box component="span" sx={{ fontWeight: "bold" }}>Bias</Box>: {bias}
             </Typography>
           </Box>);
         })}
@@ -117,7 +168,7 @@ export default function Home() {
   };
 
   async function postData(url = "", data = {}) {
-    const foramttedUrl = `http://127.0.0.1:8000${url}`;
+    const foramttedUrl = `https://api.news-wise-ai.com${url}`;
 
     try {
       const response = await fetch(foramttedUrl, {
@@ -141,7 +192,7 @@ export default function Home() {
   const renderContent = () => {
     const noResult = Object.keys(result).length === 0;
     const content = noResult ? 
-      loading ? <CircularProgress /> : <NewsForm handleSubmit={handleSubmit} /> 
+      loading ? <CircularProgress sx={{ mt: 5 }} /> : <NewsForm handleSubmit={handleSubmit} /> 
       : <Result result={result} setResult={setResult} />;
 
     return content;
