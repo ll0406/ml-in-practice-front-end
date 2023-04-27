@@ -101,9 +101,9 @@ function Result(props: any) {
       <Divider variant="middle" sx={{ m: 3 }}/>
       { fake && <>
         <Typography component="h3" variant="h4" sx={{ mt: 3 }}>
-            Real or Fake?
+            Possibly Real or Fake?
         </Typography>
-        <Typography component="h5" variant="h5">Result: {fake.label}</Typography>
+        <Typography component="h5" variant="h5">Result: Possibly {fake.label}</Typography>
         <br />
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Typography component="h5" variant="h5" sx={{ mr: 3 }}>Confidence: </Typography>
